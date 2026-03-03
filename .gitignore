@@ -1,4 +1,3 @@
-package-lock.json
 .DS_Store
 .env
 /node_modules/
@@ -6,4 +5,7 @@ package-lock.json
 # React Router
 /.react-router/
 /build/
+
+# Firebase CLI logs (if used)
+firebase-debug.log
 
