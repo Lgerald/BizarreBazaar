@@ -1,4 +1,4 @@
-import { createRequestHandler } from "@remix-run/express";
+import { createRequestHandler } from "@react-router/express";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
@@ -20,15 +20,15 @@ async function start() {
   app.disable("x-powered-by");
   app.use(compression());
   app.use(morgan("tiny"));
+  app.use(express.json());
 
+  // API routes
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true });
   });
-
   app.get("/api/ok", (_req, res) => {
     res.json({ ok: true });
   });
-
   app.get("/api/db-ok", async (_req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
@@ -37,6 +37,16 @@ async function start() {
       res.status(500).json({ ok: false });
     }
   });
+
+  // Mount your routers if present (keeps existing behavior if you re-add them)
+  try {
+    const { createUsersRouter } = await import("./api/users");
+    const { createBooksRouter } = await import("./api/books");
+    app.use("/api", createUsersRouter(prisma as any));
+    app.use("/api", createBooksRouter(prisma as any));
+  } catch {
+    // ignore if routers aren't present in this branch/state
+  }
 
   // Static assets (only meaningful in production build).
   if (isProd) {
@@ -59,8 +69,11 @@ async function start() {
 
   const remixHandler = createRequestHandler({
     build: viteDevServer
-      ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
-      : () => import("../build/server/index.js"),
+      ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
+      : (
+          // @ts-expect-error Build output exists only after `react-router build`
+          () => import("../build/server/index.js")
+        ),
   });
 
   app.all("*", remixHandler);

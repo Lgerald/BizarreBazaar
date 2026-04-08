@@ -7,56 +7,31 @@ datasource db {
   provider = "postgresql"
 }
 
-#TODO: add more context to user, and more complex user types (ie seller, buyer)
 model User {
   id        String   @id @default(cuid())
   firstName String
-  lastName  String 
+  lastName  String
   email     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  books     Book[]
 
   @@index([email], map: "user_email_idx")
 }
 
-# TODO: items definetly need to be more robust, but this should give us some words to load on the page. 
-# images are definetly a must, but will get there later
-model Item {
-  id            String   @id @default(cuid())
-  seller        User     @relation(fields: [sellerId], references: [id])
-  sellerId      String
-  name          String
-  description   String?
-  
-  price         Decimal
-  quantity      Int
-
-  category      Tag
-  subCategories Tag[]?
-  tags          Tag[]?
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([id, sellerId], map: "item_seller_idx")
-}
-
-model ItemImage {
-  id          String   @id @default(cuid())
-  item        Item     @relation(fields: [itemId], references: [id])
-  itemId      String
+model Book {
+  id          String  @id @default(cuid())
+  owner       User    @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  title       String
+  author      String?
+  description String?
   url         String
+  price       Decimal
+  quantity    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([id, ownerId], map: "book_owner_idx")
 }
-
-
-# note: we can probably use this same table for brands
-model Tag {
-  id           String   @id @default(cuid())
-  name         String   @unique 
-  description  String?
-  isCategory   Boolean @default(false)
-  @@index([id, isCategory], map: "category_idx")
-}
-
-# after we've got the schema setup lets add a seed the db with a mockaroo csv situation
-

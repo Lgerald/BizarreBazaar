@@ -11,13 +11,16 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run -c vitest.integration.config.ts",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
     "@prisma/client": "^7.6.0",
+    "@react-router/express": "7.12.0",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",
-    "@remix-run/express": "^2.17.4",
     "compression": "^1.8.1",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
@@ -32,16 +35,25 @@
     "@prisma/adapter-pg": "^7.6.0",
     "@react-router/dev": "7.12.0",
     "@tailwindcss/vite": "^4.1.13",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/compression": "^1.8.1",
     "@types/morgan": "^1.9.10",
     "@types/node": "^22",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@types/supertest": "^7.2.0",
+    "jsdom": "^29.0.2",
     "prisma": "^7.6.0",
+    "supertest": "^7.2.2",
     "tailwindcss": "^4.1.13",
+    "testcontainers": "^11.14.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4"
+    ,
+    "vitest": "^4.1.3"
   }
 }

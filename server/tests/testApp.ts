@@ -1,0 +1,12 @@
+import express from "express";
+import { createBooksRouter } from "../api/books";
+import { createUsersRouter } from "../api/users";
+
+export function makeTestApp(prisma: any) {
+  const app = express();
+  app.use(express.json());
+  app.use("/api", createUsersRouter(prisma));
+  app.use("/api", createBooksRouter(prisma));
+  return app;
+}
+
