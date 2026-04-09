@@ -1,4 +1,5 @@
 import { UserCard, type UserViewModel } from "./UserCard";
+import { Link } from "react-router";
 
 export function UsersGrid({ users }: { users: UserViewModel[] }) {
   if (users.length === 0) {
@@ -14,7 +15,13 @@ export function UsersGrid({ users }: { users: UserViewModel[] }) {
       }}
     >
       {users.map((user) => (
-        <UserCard key={user.id} user={user} />
+        <Link
+          key={user.id}
+          to={`/users/${user.id}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <UserCard user={user} />
+        </Link>
       ))}
     </section>
   );
