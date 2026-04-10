@@ -1,10 +1,16 @@
 import { createRequestHandler } from "@react-router/express";
+import cookieParser from "cookie-parser";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client/client";
+import {
+  handleSessionLogin,
+  handleSessionLogout,
+} from "./auth/session";
+import { createAuthRouter } from "./api/auth";
 
 const port = process.env.PORT || 3001;
 const isProd = process.env.NODE_ENV === "production";
@@ -21,6 +27,7 @@ async function start() {
   app.use(compression());
   app.use(morgan("tiny"));
   app.use(express.json());
+  app.use(cookieParser());
 
   // API routes
   app.get("/api/health", (_req, res) => {
@@ -37,6 +44,11 @@ async function start() {
       res.status(500).json({ ok: false });
     }
   });
+
+  // Auth/session APIs (Firebase session cookie)
+  app.post("/api/session/login", handleSessionLogin);
+  app.post("/api/session/logout", handleSessionLogout);
+  app.use("/api", createAuthRouter(prisma as any));
 
   // Mount your routers if present (keeps existing behavior if you re-add them)
   try {

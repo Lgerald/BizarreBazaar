@@ -1,5 +1,5 @@
 import type { Route } from "./+types/users.$userId";
-import { Form, useLoaderData } from "react-router";
+import { Form, redirect, useLoaderData } from "react-router";
 
 import { BooksGrid } from "~/Views/Books/BooksGrid";
 import type { BookViewModel } from "~/Views/Books/BookCard";
@@ -34,7 +34,7 @@ export async function action({ params, request }: Route.ActionArgs) {
   });
 
   if (!res.ok) throw new Response("Failed to create book", { status: 500 });
-  return null;
+  return redirect(`/users/${userId}`);
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -42,7 +42,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   if (!userId) throw new Response("Missing userId", { status: 400 });
 
   const origin = new URL(request.url).origin;
-  const [userRes, booksRes] = await Promise.all([
+  const cookie = request.headers.get("cookie") ?? "";
+  const [meRes, userRes, booksRes] = await Promise.all([
+    fetch(`${origin}/api/me`, {
+      headers: cookie ? { cookie } : undefined,
+    }),
     fetch(`${origin}/api/users/${userId}`),
     fetch(`${origin}/api/users/${userId}/books`),
   ]);
@@ -51,107 +55,114 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   if (!userRes.ok) throw new Response("Failed to load user", { status: 500 });
   if (!booksRes.ok) throw new Response("Failed to load books", { status: 500 });
 
+  const meJson = meRes.ok ? await meRes.json() : null;
   const userJson = await userRes.json();
   const booksJson = await booksRes.json();
+
+  const canCreateBooks =
+    Boolean(meJson?.ok) && String(meJson?.appUser?.id ?? "") === userId;
 
   return {
     user: userJson.user as UserViewModel,
     books: booksJson.books as BookViewModel[],
+    canCreateBooks,
   };
 }
 
 export default function UserDetailRoute() {
-  const { user, books } = useLoaderData<typeof loader>();
+  const { user, books, canCreateBooks } = useLoaderData<typeof loader>();
 
   return (
     <Welcome>
       <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>User</h1>
       <UserCard user={user} />
 
-      <section
-        style={{
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          padding: 16,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
-          Add a new book
-        </h2>
+      {canCreateBooks ? (
+        <section
+          style={{
+            border: "1px solid #e5e7eb",
+            borderRadius: 12,
+            padding: 16,
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>
+            Add a new book
+          </h2>
 
-        <Form method="post" style={{ display: "grid", gap: 10 }}>
-          <label style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontWeight: 600 }}>Title</span>
-            <input
-              name="title"
-              required
+          <Form method="post" style={{ display: "grid", gap: 10 }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontWeight: 600 }}>Title</span>
+              <input
+                name="title"
+                required
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                }}
+              />
+            </label>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontWeight: 600 }}>URL</span>
+              <input
+                name="url"
+                type="url"
+                required
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                }}
+              />
+            </label>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontWeight: 600 }}>Author (optional)</span>
+              <input
+                name="author"
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                }}
+              />
+            </label>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontWeight: 600 }}>Description (optional)</span>
+              <textarea
+                name="description"
+                rows={3}
+                style={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  resize: "vertical",
+                }}
+              />
+            </label>
+
+            <button
+              type="submit"
               style={{
-                border: "1px solid #e5e7eb",
-                borderRadius: 10,
+                justifySelf: "start",
+                borderRadius: 12,
+                border: "1px solid #111827",
+                background: "#111827",
+                color: "white",
                 padding: "10px 12px",
+                fontWeight: 700,
+                cursor: "pointer",
               }}
-            />
-          </label>
-
-          <label style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontWeight: 600 }}>URL</span>
-            <input
-              name="url"
-              type="url"
-              required
-              style={{
-                border: "1px solid #e5e7eb",
-                borderRadius: 10,
-                padding: "10px 12px",
-              }}
-            />
-          </label>
-
-          <label style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontWeight: 600 }}>Author (optional)</span>
-            <input
-              name="author"
-              style={{
-                border: "1px solid #e5e7eb",
-                borderRadius: 10,
-                padding: "10px 12px",
-              }}
-            />
-          </label>
-
-          <label style={{ display: "grid", gap: 6 }}>
-            <span style={{ fontWeight: 600 }}>Description (optional)</span>
-            <textarea
-              name="description"
-              rows={3}
-              style={{
-                border: "1px solid #e5e7eb",
-                borderRadius: 10,
-                padding: "10px 12px",
-                resize: "vertical",
-              }}
-            />
-          </label>
-
-          <button
-            type="submit"
-            style={{
-              justifySelf: "start",
-              borderRadius: 12,
-              border: "1px solid #111827",
-              background: "#111827",
-              color: "white",
-              padding: "10px 12px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Create book
-          </button>
-        </Form>
-      </section>
+            >
+              Create book
+            </button>
+          </Form>
+        </section>
+      ) : null}
 
       <h2 style={{ margin: "8px 0 0", fontSize: 18, fontWeight: 800 }}>
         Books

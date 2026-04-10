@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export type BookViewModel = {
   id: string;
   title: string;
@@ -5,6 +7,7 @@ export type BookViewModel = {
   author?: string | null;
   description?: string | null;
   ownerId?: string;
+  ownerName?: string;
 };
 
 export function BookCard({ book }: { book: BookViewModel }) {
@@ -24,12 +27,23 @@ export function BookCard({ book }: { book: BookViewModel }) {
         <div style={{ color: "#4b5563" }}>by {book.author}</div>
       ) : null}
 
+      {book.ownerName ? (
+        <div style={{ color: "#4b5563" }}>
+          Owner:{" "}
+          {book.ownerId ? (
+            <Link to={`/users/${book.ownerId}`}>{book.ownerName}</Link>
+          ) : (
+            book.ownerName
+          )}
+        </div>
+      ) : null}
+
       {book.description ? (
         <div style={{ color: "#6b7280" }}>{book.description}</div>
       ) : null}
 
       <a href={book.url} target="_blank" rel="noreferrer">
-        {book.url}
+        deets
       </a>
 
       <div style={{ color: "#9ca3af", fontSize: 12 }}>id: {book.id}</div>

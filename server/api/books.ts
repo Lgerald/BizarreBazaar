@@ -28,12 +28,18 @@ export function createBooksRouter(prisma: PrismaClient) {
           orderBy: { createdAt: "desc" },
           skip,
           take: limit,
+          include: {
+            owner: { select: { firstName: true, lastName: true } },
+          },
         }),
       ]);
 
       return res.json({
         ok: true,
-        books,
+        books: books.map((b: any) => ({
+          ...b,
+          ownerName: b.owner ? `${b.owner.firstName} ${b.owner.lastName}`.trim() : undefined,
+        })),
         meta: {
           page,
           limit,
@@ -127,8 +133,17 @@ export function createBooksRouter(prisma: PrismaClient) {
       const books = await prisma.book.findMany({
         where: { ownerId: userId },
         orderBy: { createdAt: "desc" },
+        include: {
+          owner: { select: { firstName: true, lastName: true } },
+        },
       });
-      return res.json({ ok: true, books });
+      return res.json({
+        ok: true,
+        books: books.map((b: any) => ({
+          ...b,
+          ownerName: b.owner ? `${b.owner.firstName} ${b.owner.lastName}`.trim() : undefined,
+        })),
+      });
     } catch (err) {
       console.error("GET /api/users/:userId/books failed", err);
       return res.status(500).json({ ok: false });

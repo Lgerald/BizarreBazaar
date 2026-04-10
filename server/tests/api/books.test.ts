@@ -8,8 +8,8 @@ describe("books API", () => {
       book: {
         count: async () => 2,
         findMany: async () => [
-          { id: "b1", title: "T1", ownerId: "u1" },
-          { id: "b2", title: "T2", ownerId: "u2" },
+          { id: "b1", title: "T1", ownerId: "u1", owner: { firstName: "A", lastName: "One" } },
+          { id: "b2", title: "T2", ownerId: "u2", owner: { firstName: "B", lastName: "Two" } },
         ],
       },
     };
@@ -20,6 +20,7 @@ describe("books API", () => {
     expect(res.body.ok).toBe(true);
     expect(res.body.books).toHaveLength(2);
     expect(res.body.books[0].id).toBe("b1");
+    expect(res.body.books[0].ownerName).toBe("A One");
     expect(res.body.meta).toMatchObject({
       page: 1,
       limit: 20,
@@ -35,7 +36,7 @@ describe("books API", () => {
         findMany: async ({ skip, take }: any) => {
           expect(skip).toBe(1);
           expect(take).toBe(1);
-          return [{ id: "b2", title: "T2", ownerId: "u1" }];
+          return [{ id: "b2", title: "T2", ownerId: "u1", owner: { firstName: "A", lastName: "One" } }];
         },
       },
     };
@@ -45,6 +46,7 @@ describe("books API", () => {
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
     expect(res.body.books).toHaveLength(1);
+    expect(res.body.books[0].ownerName).toBe("A One");
     expect(res.body.meta).toMatchObject({
       page: 2,
       limit: 1,
@@ -151,8 +153,18 @@ describe("books API", () => {
     const prisma = {
       book: {
         findMany: async ({ where }: any) => [
-          { id: "b1", ownerId: where.ownerId, title: "T1" },
-          { id: "b2", ownerId: where.ownerId, title: "T2" },
+          {
+            id: "b1",
+            ownerId: where.ownerId,
+            title: "T1",
+            owner: { firstName: "A", lastName: "One" },
+          },
+          {
+            id: "b2",
+            ownerId: where.ownerId,
+            title: "T2",
+            owner: { firstName: "A", lastName: "One" },
+          },
         ],
       },
     };
@@ -163,6 +175,7 @@ describe("books API", () => {
     expect(res.body.ok).toBe(true);
     expect(res.body.books).toHaveLength(2);
     expect(res.body.books[0].ownerId).toBe("u1");
+    expect(res.body.books[0].ownerName).toBe("A One");
   });
 });
 
