@@ -7,11 +7,17 @@ import { getFirebaseAuthClient } from "~/lib/firebase.client";
 type SidebarItem = {
   label: string;
   to: string;
+  children?: SidebarItem[];
 };
 
 const navItems: SidebarItem[] = [
   { label: "Users", to: "/users" },
-  { label: "Books", to: "/books" },
+  { label: "Calendar", to: "/calendar" },
+  {
+    label: "Books",
+    to: "/books",
+    children: [{ label: "Mall", to: "/mall" }],
+  },
 ];
 
 type MeResponse =
@@ -306,21 +312,45 @@ export function Sidebar() {
 
       <nav aria-label="Primary navigation" style={{ display: "grid", gap: 8 }}>
         {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            style={({ isActive }) => ({
-              padding: "10px 12px",
-              borderRadius: 12,
-              textDecoration: "none",
-              border: "1px solid #e5e7eb",
-              background: isActive ? "#111827" : "white",
-              color: isActive ? "white" : "#111827",
-              fontWeight: 600,
-            })}
-          >
-            {item.label}
-          </NavLink>
+          <div key={item.to} style={{ display: "grid", gap: 6 }}>
+            <NavLink
+              to={item.to}
+              end
+              style={({ isActive }) => ({
+                padding: "10px 12px",
+                borderRadius: 12,
+                textDecoration: "none",
+                border: "1px solid #e5e7eb",
+                background: isActive ? "#111827" : "white",
+                color: isActive ? "white" : "#111827",
+                fontWeight: 600,
+              })}
+            >
+              {item.label}
+            </NavLink>
+
+            {item.children?.length ? (
+              <div style={{ display: "grid", gap: 6 }}>
+                {item.children.map((child) => (
+                  <NavLink
+                    key={child.to}
+                    to={child.to}
+                    style={({ isActive }) => ({
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      textDecoration: "none",
+                      border: "1px solid #e5e7eb",
+                      background: isActive ? "#111827" : "white",
+                      color: isActive ? "white" : "#111827",
+                      fontWeight: 600,
+                    })}
+                  >
+                    {child.label}
+                  </NavLink>
+                ))}
+              </div>
+            ) : null}
+          </div>
         ))}
       </nav>
 

@@ -3,7 +3,6 @@ import { useLoaderData } from "react-router";
 
 import { UsersGrid } from "~/Views/Users/UsersGrid";
 import type { UserViewModel } from "~/Views/Users/UserCard";
-import { Welcome } from "~/welcome/welcome";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const origin = new URL(request.url).origin;
@@ -17,10 +16,10 @@ export default function UsersRoute() {
   const { users } = useLoaderData<typeof loader>();
 
   return (
-    <Welcome>
+    <>
       <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Users</h1>
       <UsersGrid users={users} />
-    </Welcome>
+    </>
   );
 }
 

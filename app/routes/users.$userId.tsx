@@ -4,7 +4,6 @@ import { Form, redirect, useLoaderData } from "react-router";
 import { BooksGrid } from "~/Views/Books/BooksGrid";
 import type { BookViewModel } from "~/Views/Books/BookCard";
 import { UserCard, type UserViewModel } from "~/Views/Users/UserCard";
-import { Welcome } from "~/welcome/welcome";
 
 export async function action({ params, request }: Route.ActionArgs) {
   const userId = params.userId;
@@ -73,7 +72,7 @@ export default function UserDetailRoute() {
   const { user, books, canCreateBooks } = useLoaderData<typeof loader>();
 
   return (
-    <Welcome>
+    <>
       <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>User</h1>
       <UserCard user={user} />
 
@@ -168,7 +167,7 @@ export default function UserDetailRoute() {
         Books
       </h2>
       <BooksGrid books={books} />
-    </Welcome>
+    </>
   );
 }
 

@@ -15,6 +15,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   books     Book[]
+  calendarEventsCreated CalendarEvent[] @relation("CalendarEventCreatedBy")
 
   @@index([email], map: "user_email_idx")
 }
@@ -27,11 +28,31 @@ model Book {
   author      String?
   description String?
   url         String
-  price       Decimal
-  quantity    Int
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([id, ownerId], map: "book_owner_idx")
+}
+
+model CalendarEvent {
+  id            String   @id @default(cuid())
+  googleEventId String   @unique
+  calendarId    String
+
+  summary     String
+  description String?
+  location    String?
+
+  startAt DateTime
+  endAt   DateTime
+  timeZone String?
+
+  createdBy   User?   @relation("CalendarEventCreatedBy", fields: [createdById], references: [id])
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([calendarId, startAt], map: "calendar_event_calendar_start_idx")
+  @@index([createdById], map: "calendar_event_created_by_idx")
 }
