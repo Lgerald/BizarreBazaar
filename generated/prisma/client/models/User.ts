@@ -191,7 +191,6 @@ export type UserWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   books?: Prisma.BookListRelationFilter
-  calendarEventsCreated?: Prisma.CalendarEventListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -202,7 +201,6 @@ export type UserOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   books?: Prisma.BookOrderByRelationAggregateInput
-  calendarEventsCreated?: Prisma.CalendarEventOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -216,7 +214,6 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   books?: Prisma.BookListRelationFilter
-  calendarEventsCreated?: Prisma.CalendarEventListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -251,7 +248,6 @@ export type UserCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   books?: Prisma.BookCreateNestedManyWithoutOwnerInput
-  calendarEventsCreated?: Prisma.CalendarEventCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -262,7 +258,6 @@ export type UserUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   books?: Prisma.BookUncheckedCreateNestedManyWithoutOwnerInput
-  calendarEventsCreated?: Prisma.CalendarEventUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUpdateInput = {
@@ -273,7 +268,6 @@ export type UserUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   books?: Prisma.BookUpdateManyWithoutOwnerNestedInput
-  calendarEventsCreated?: Prisma.CalendarEventUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -284,7 +278,6 @@ export type UserUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   books?: Prisma.BookUncheckedUpdateManyWithoutOwnerNestedInput
-  calendarEventsCreated?: Prisma.CalendarEventUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -346,11 +339,6 @@ export type UserScalarRelationFilter = {
   isNot?: Prisma.UserWhereInput
 }
 
-export type UserNullableScalarRelationFilter = {
-  is?: Prisma.UserWhereInput | null
-  isNot?: Prisma.UserWhereInput | null
-}
-
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -373,22 +361,6 @@ export type UserUpdateOneRequiredWithoutBooksNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBooksInput, Prisma.UserUpdateWithoutBooksInput>, Prisma.UserUncheckedUpdateWithoutBooksInput>
 }
 
-export type UserCreateNestedOneWithoutCalendarEventsCreatedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutCalendarEventsCreatedInput, Prisma.UserUncheckedCreateWithoutCalendarEventsCreatedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCalendarEventsCreatedInput
-  connect?: Prisma.UserWhereUniqueInput
-}
-
-export type UserUpdateOneWithoutCalendarEventsCreatedNestedInput = {
-  create?: Prisma.XOR<Prisma.UserCreateWithoutCalendarEventsCreatedInput, Prisma.UserUncheckedCreateWithoutCalendarEventsCreatedInput>
-  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCalendarEventsCreatedInput
-  upsert?: Prisma.UserUpsertWithoutCalendarEventsCreatedInput
-  disconnect?: Prisma.UserWhereInput | boolean
-  delete?: Prisma.UserWhereInput | boolean
-  connect?: Prisma.UserWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCalendarEventsCreatedInput, Prisma.UserUpdateWithoutCalendarEventsCreatedInput>, Prisma.UserUncheckedUpdateWithoutCalendarEventsCreatedInput>
-}
-
 export type UserCreateWithoutBooksInput = {
   id?: string
   firstName: string
@@ -396,7 +368,6 @@ export type UserCreateWithoutBooksInput = {
   email: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  calendarEventsCreated?: Prisma.CalendarEventCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutBooksInput = {
@@ -406,7 +377,6 @@ export type UserUncheckedCreateWithoutBooksInput = {
   email: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  calendarEventsCreated?: Prisma.CalendarEventUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutBooksInput = {
@@ -432,7 +402,6 @@ export type UserUpdateWithoutBooksInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  calendarEventsCreated?: Prisma.CalendarEventUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBooksInput = {
@@ -442,63 +411,6 @@ export type UserUncheckedUpdateWithoutBooksInput = {
   email?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  calendarEventsCreated?: Prisma.CalendarEventUncheckedUpdateManyWithoutCreatedByNestedInput
-}
-
-export type UserCreateWithoutCalendarEventsCreatedInput = {
-  id?: string
-  firstName: string
-  lastName: string
-  email: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  books?: Prisma.BookCreateNestedManyWithoutOwnerInput
-}
-
-export type UserUncheckedCreateWithoutCalendarEventsCreatedInput = {
-  id?: string
-  firstName: string
-  lastName: string
-  email: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  books?: Prisma.BookUncheckedCreateNestedManyWithoutOwnerInput
-}
-
-export type UserCreateOrConnectWithoutCalendarEventsCreatedInput = {
-  where: Prisma.UserWhereUniqueInput
-  create: Prisma.XOR<Prisma.UserCreateWithoutCalendarEventsCreatedInput, Prisma.UserUncheckedCreateWithoutCalendarEventsCreatedInput>
-}
-
-export type UserUpsertWithoutCalendarEventsCreatedInput = {
-  update: Prisma.XOR<Prisma.UserUpdateWithoutCalendarEventsCreatedInput, Prisma.UserUncheckedUpdateWithoutCalendarEventsCreatedInput>
-  create: Prisma.XOR<Prisma.UserCreateWithoutCalendarEventsCreatedInput, Prisma.UserUncheckedCreateWithoutCalendarEventsCreatedInput>
-  where?: Prisma.UserWhereInput
-}
-
-export type UserUpdateToOneWithWhereWithoutCalendarEventsCreatedInput = {
-  where?: Prisma.UserWhereInput
-  data: Prisma.XOR<Prisma.UserUpdateWithoutCalendarEventsCreatedInput, Prisma.UserUncheckedUpdateWithoutCalendarEventsCreatedInput>
-}
-
-export type UserUpdateWithoutCalendarEventsCreatedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  firstName?: Prisma.StringFieldUpdateOperationsInput | string
-  lastName?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  books?: Prisma.BookUpdateManyWithoutOwnerNestedInput
-}
-
-export type UserUncheckedUpdateWithoutCalendarEventsCreatedInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  firstName?: Prisma.StringFieldUpdateOperationsInput | string
-  lastName?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  books?: Prisma.BookUncheckedUpdateManyWithoutOwnerNestedInput
 }
 
 
@@ -508,12 +420,10 @@ export type UserUncheckedUpdateWithoutCalendarEventsCreatedInput = {
 
 export type UserCountOutputType = {
   books: number
-  calendarEventsCreated: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   books?: boolean | UserCountOutputTypeCountBooksArgs
-  calendarEventsCreated?: boolean | UserCountOutputTypeCountCalendarEventsCreatedArgs
 }
 
 /**
@@ -533,13 +443,6 @@ export type UserCountOutputTypeCountBooksArgs<ExtArgs extends runtime.Types.Exte
   where?: Prisma.BookWhereInput
 }
 
-/**
- * UserCountOutputType without action
- */
-export type UserCountOutputTypeCountCalendarEventsCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.CalendarEventWhereInput
-}
-
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -549,7 +452,6 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAt?: boolean
   updatedAt?: boolean
   books?: boolean | Prisma.User$booksArgs<ExtArgs>
-  calendarEventsCreated?: boolean | Prisma.User$calendarEventsCreatedArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -583,7 +485,6 @@ export type UserSelectScalar = {
 export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   books?: boolean | Prisma.User$booksArgs<ExtArgs>
-  calendarEventsCreated?: boolean | Prisma.User$calendarEventsCreatedArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -593,7 +494,6 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "User"
   objects: {
     books: Prisma.$BookPayload<ExtArgs>[]
-    calendarEventsCreated: Prisma.$CalendarEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -997,7 +897,6 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   books<T extends Prisma.User$booksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$booksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BookPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  calendarEventsCreated<T extends Prisma.User$calendarEventsCreatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$calendarEventsCreatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CalendarEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1447,30 +1346,6 @@ export type User$booksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
   take?: number
   skip?: number
   distinct?: Prisma.BookScalarFieldEnum | Prisma.BookScalarFieldEnum[]
-}
-
-/**
- * User.calendarEventsCreated
- */
-export type User$calendarEventsCreatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the CalendarEvent
-   */
-  select?: Prisma.CalendarEventSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the CalendarEvent
-   */
-  omit?: Prisma.CalendarEventOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.CalendarEventInclude<ExtArgs> | null
-  where?: Prisma.CalendarEventWhereInput
-  orderBy?: Prisma.CalendarEventOrderByWithRelationInput | Prisma.CalendarEventOrderByWithRelationInput[]
-  cursor?: Prisma.CalendarEventWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.CalendarEventScalarFieldEnum | Prisma.CalendarEventScalarFieldEnum[]
 }
 
 /**

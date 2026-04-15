@@ -72,12 +72,7 @@ describe("calendar API", () => {
 
   it("POST /api/calendar/events creates google event and persists record", async () => {
     (session.verifyRequestSession as any).mockResolvedValueOnce({ uid: "u", email: "leah@example.com" });
-    const prisma = {
-      user: { findUnique: vi.fn(async () => ({ id: "app_u1" })) },
-      calendarEvent: {
-        create: vi.fn(async ({ data }: any) => ({ id: "ce1", ...data })),
-      },
-    };
+    const prisma = {};
     const app = makeTestApp(prisma);
 
     const res = await request(app).post("/api/calendar/events").send({
@@ -88,7 +83,7 @@ describe("calendar API", () => {
 
     expect(res.status).toBe(201);
     expect(res.body.ok).toBe(true);
-    expect(res.body.record.googleEventId).toBe("e_new");
+    expect(res.body.event.id).toBe("e_new");
   });
 });
 

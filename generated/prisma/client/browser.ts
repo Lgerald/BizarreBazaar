@@ -27,8 +27,3 @@ export type User = Prisma.UserModel
  * 
  */
 export type Book = Prisma.BookModel
-/**
- * Model CalendarEvent
- * 
- */
-export type CalendarEvent = Prisma.CalendarEventModel

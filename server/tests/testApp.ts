@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import { createAuthRouter } from "../api/auth";
 import { createBooksRouter } from "../api/books";
 import { createCalendarRouter } from "../api/calendar";
+import { createEventProposalsRouter } from "../api/eventProposals";
 import { createUsersRouter } from "../api/users";
 
 export function makeTestApp(prisma: any) {
@@ -13,6 +14,7 @@ export function makeTestApp(prisma: any) {
   app.use("/api", createUsersRouter(prisma));
   app.use("/api", createBooksRouter(prisma));
   app.use("/api", createCalendarRouter(prisma));
+  app.use("/api", createEventProposalsRouter(prisma));
   return app;
 }
 

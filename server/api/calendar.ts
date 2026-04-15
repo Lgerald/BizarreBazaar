@@ -1,5 +1,4 @@
 import { Router } from "express";
-import type { PrismaClient } from "../../generated/prisma/client/client";
 import { requireUser } from "../auth/requireUser";
 import {
   buildOAuthConsentUrl,
@@ -23,7 +22,7 @@ function allowSetup(req: any): boolean {
   return Boolean(provided) && provided === setupKey;
 }
 
-export function createCalendarRouter(prisma: PrismaClient) {
+export function createCalendarRouter(_prisma: any) {
   const router = Router();
 
   // Bootstrap helpers (personal project ergonomics)
@@ -149,26 +148,7 @@ export function createCalendarRouter(prisma: PrismaClient) {
 
       const googleEvent = insertRes.data;
       if (!googleEvent.id) return res.status(500).json({ ok: false, error: "missing event id" });
-
-      const createdById = (req as any).user?.email
-        ? (await prisma.user.findUnique({ where: { email: (req as any).user.email } }))?.id
-        : undefined;
-
-      const record = await (prisma as any).calendarEvent.create({
-        data: {
-          googleEventId: googleEvent.id,
-          calendarId,
-          summary,
-          ...(description ? { description } : {}),
-          ...(location ? { location } : {}),
-          startAt,
-          endAt,
-          ...(timeZone ? { timeZone } : {}),
-          ...(createdById ? { createdBy: { connect: { id: createdById } } } : {}),
-        },
-      });
-
-      return res.status(201).json({ ok: true, event: googleEvent, record });
+      return res.status(201).json({ ok: true, event: googleEvent });
     } catch (err) {
       console.error("POST /api/calendar/events failed", err);
       return res.status(500).json({ ok: false });
@@ -233,18 +213,6 @@ export function createCalendarRouter(prisma: PrismaClient) {
         },
       } as any);
 
-      await (prisma as any).calendarEvent.updateMany({
-        where: { googleEventId: id },
-        data: {
-          ...(summary !== undefined ? { summary } : {}),
-          ...(description !== undefined ? { description } : {}),
-          ...(location !== undefined ? { location } : {}),
-          ...(startAt !== undefined ? { startAt } : {}),
-          ...(endAt !== undefined ? { endAt } : {}),
-          ...(timeZone !== undefined ? { timeZone } : {}),
-        },
-      });
-
       return res.json({ ok: true, event: patchRes.data });
     } catch (err) {
       console.error("PATCH /api/calendar/events/:id failed", err);
@@ -259,7 +227,6 @@ export function createCalendarRouter(prisma: PrismaClient) {
       const calendarId = getCalendarId();
 
       await calendar.events.delete({ calendarId, eventId: id } as any);
-      await (prisma as any).calendarEvent.deleteMany({ where: { googleEventId: id } });
 
       return res.json({ ok: true });
     } catch (err) {

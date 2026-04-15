@@ -55,9 +55,11 @@ async function start() {
     const { createUsersRouter } = await import("./api/users");
     const { createBooksRouter } = await import("./api/books");
     const { createCalendarRouter } = await import("./api/calendar");
+    const { createEventProposalsRouter } = await import("./api/eventProposals");
     app.use("/api", createUsersRouter(prisma as any));
     app.use("/api", createBooksRouter(prisma as any));
     app.use("/api", createCalendarRouter(prisma as any));
+    app.use("/api", createEventProposalsRouter(prisma as any));
   } catch {
     // ignore if routers aren't present in this branch/state
   }
