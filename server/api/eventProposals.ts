@@ -1,19 +1,21 @@
-import { Router } from "express";
-import type { PrismaClient } from "../../generated/prisma/client/client";
-import { requireUser } from "../auth/requireUser";
-import { getCalendarId, makeCalendarClient } from "../integrations/googleCalendar";
+import {
+  getCalendarId,
+  makeCalendarClient,
+} from "../integrations/googleCalendar";
+import { readJson, json, isIsoDateTimeString } from "../http/httpUtil";
+import { requireUserOr401 } from "../http/requireAuth";
+import type { ApiContext } from "./types";
 
-function isIsoDateTimeString(v: unknown): v is string {
-  return typeof v === "string" && Number.isFinite(Date.parse(v));
-}
+export async function handleEventProposalsApi(ctx: ApiContext): Promise<Response | null> {
+  const { pathname, method, request } = ctx;
 
-export function createEventProposalsRouter(prisma: PrismaClient) {
-  const router = Router();
+  if (pathname === "/api/event-proposals" && method === "GET") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+    const meEmail = auth.email;
 
-  router.get("/event-proposals", requireUser, async (req, res) => {
     try {
-      const meEmail = (req as any).user?.email as string | undefined;
-      if (!meEmail) return res.status(400).json({ ok: false, error: "missing user email" });
+      if (!meEmail) return json({ ok: false, error: "missing user email" }, { status: 400 });
 
       const calendar = makeCalendarClient();
       const calendarId = getCalendarId();
@@ -28,7 +30,7 @@ export function createEventProposalsRouter(prisma: PrismaClient) {
       } as any);
 
       const items = data.items ?? [];
-      return res.json({
+      return json({
         ok: true,
         proposals: items.map((e: any) => {
           const attendees = Array.isArray(e.attendees) ? e.attendees : [];
@@ -47,38 +49,41 @@ export function createEventProposalsRouter(prisma: PrismaClient) {
       });
     } catch (err) {
       console.error("GET /api/event-proposals failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.post("/event-proposals", requireUser, async (req, res) => {
-    const summary = typeof req.body?.summary === "string" ? req.body.summary.trim() : "";
+  if (pathname === "/api/event-proposals" && method === "POST") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+    const meEmail = auth.email;
+
+    const body = (await readJson(request)) ?? {};
+    const summary = typeof body.summary === "string" ? body.summary.trim() : "";
     const description =
-      typeof req.body?.description === "string" ? req.body.description.trim() : undefined;
-    const location =
-      typeof req.body?.location === "string" ? req.body.location.trim() : undefined;
+      typeof body.description === "string" ? body.description.trim() : undefined;
+    const location = typeof body.location === "string" ? body.location.trim() : undefined;
 
-    const startAtRaw = req.body?.startAt;
-    const endAtRaw = req.body?.endAt;
-    const timeZone =
-      typeof req.body?.timeZone === "string" ? req.body.timeZone.trim() : undefined;
+    const startAtRaw = body.startAt;
+    const endAtRaw = body.endAt;
+    const timeZone = typeof body.timeZone === "string" ? body.timeZone.trim() : undefined;
 
-    if (!summary) return res.status(400).json({ ok: false, error: "summary required" });
+    if (!summary) return json({ ok: false, error: "summary required" }, { status: 400 });
     if (!isIsoDateTimeString(startAtRaw) || !isIsoDateTimeString(endAtRaw)) {
-      return res
-        .status(400)
-        .json({ ok: false, error: "startAt and endAt must be ISO datetime strings" });
+      return json(
+        { ok: false, error: "startAt and endAt must be ISO datetime strings" },
+        { status: 400 }
+      );
     }
 
     const startAt = new Date(startAtRaw);
     const endAt = new Date(endAtRaw);
     if (!(endAt.getTime() > startAt.getTime())) {
-      return res.status(400).json({ ok: false, error: "endAt must be after startAt" });
+      return json({ ok: false, error: "endAt must be after startAt" }, { status: 400 });
     }
 
     try {
-      const meEmail = (req as any).user?.email as string | undefined;
-      if (!meEmail) return res.status(400).json({ ok: false, error: "missing user email" });
+      if (!meEmail) return json({ ok: false, error: "missing user email" }, { status: 400 });
 
       const calendar = makeCalendarClient();
       const calendarId = getCalendarId();
@@ -102,25 +107,29 @@ export function createEventProposalsRouter(prisma: PrismaClient) {
         },
       } as any);
 
-      return res.status(201).json({ ok: true, event: insertRes.data });
+      return json({ ok: true, event: insertRes.data }, { status: 201 });
     } catch (err) {
       console.error("POST /api/event-proposals failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.post("/event-proposals/:eventId/join", requireUser, async (req, res) => {
-    const { eventId } = req.params;
+  const proposalJoinMatch = /^\/api\/event-proposals\/([^/]+)\/join$/.exec(pathname);
+  if (proposalJoinMatch && method === "POST") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+    const meEmail = auth.email;
+    const eventId = proposalJoinMatch[1]!;
+
     try {
-      const meEmail = (req as any).user?.email as string | undefined;
-      if (!meEmail) return res.status(400).json({ ok: false, error: "missing user email" });
+      if (!meEmail) return json({ ok: false, error: "missing user email" }, { status: 400 });
 
       const calendar = makeCalendarClient();
       const calendarId = getCalendarId();
 
       const existing = await calendar.events.get({ calendarId, eventId } as any);
       const e: any = existing.data;
-      if (!e?.id) return res.status(404).json({ ok: false, error: "event not found" });
+      if (!e?.id) return json({ ok: false, error: "event not found" }, { status: 404 });
 
       const attendees = Array.isArray(e.attendees) ? [...e.attendees] : [];
       const already = attendees.some(
@@ -137,17 +146,19 @@ export function createEventProposalsRouter(prisma: PrismaClient) {
         requestBody: { attendees },
       } as any);
 
-      return res.status(already ? 200 : 201).json({
-        ok: true,
-        alreadyJoined: already ? true : undefined,
-        event: patched.data,
-      });
+      return json(
+        {
+          ok: true,
+          alreadyJoined: already ? true : undefined,
+          event: patched.data,
+        },
+        already ? { status: 200 } : { status: 201 }
+      );
     } catch (err) {
       console.error("POST /api/event-proposals/:eventId/join failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  return router;
+  return null;
 }
-

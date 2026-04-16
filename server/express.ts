@@ -4,22 +4,15 @@ import compression from "compression";
 import express from "express";
 import morgan from "morgan";
 import "dotenv/config";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../generated/prisma/client/client";
-import {
-  handleSessionLogin,
-  handleSessionLogout,
-} from "./auth/session";
-import { createAuthRouter } from "./api/auth";
+import { getPrisma } from "./prisma";
+import { mountApiOnExpress } from "./http/expressAdapter";
+import { importServerBuild } from "./resolveServerBuild";
 
 const port = process.env.PORT || 3001;
 const isProd = process.env.NODE_ENV === "production";
 
 async function start() {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
-  });
-  const prisma = new PrismaClient({ adapter });
+  const prisma = getPrisma();
 
   const app = express();
 
@@ -29,42 +22,8 @@ async function start() {
   app.use(express.json());
   app.use(cookieParser());
 
-  // API routes
-  app.get("/api/health", (_req, res) => {
-    res.json({ ok: true });
-  });
-  app.get("/api/ok", (_req, res) => {
-    res.json({ ok: true });
-  });
-  app.get("/api/db-ok", async (_req, res) => {
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      res.json({ ok: true });
-    } catch {
-      res.status(500).json({ ok: false });
-    }
-  });
+  mountApiOnExpress(app, prisma as any);
 
-  // Auth/session APIs (Firebase session cookie)
-  app.post("/api/session/login", handleSessionLogin);
-  app.post("/api/session/logout", handleSessionLogout);
-  app.use("/api", createAuthRouter(prisma as any));
-
-  // Mount your routers if present (keeps existing behavior if you re-add them)
-  try {
-    const { createUsersRouter } = await import("./api/users");
-    const { createBooksRouter } = await import("./api/books");
-    const { createCalendarRouter } = await import("./api/calendar");
-    const { createEventProposalsRouter } = await import("./api/eventProposals");
-    app.use("/api", createUsersRouter(prisma as any));
-    app.use("/api", createBooksRouter(prisma as any));
-    app.use("/api", createCalendarRouter(prisma as any));
-    app.use("/api", createEventProposalsRouter(prisma as any));
-  } catch {
-    // ignore if routers aren't present in this branch/state
-  }
-
-  // Static assets (only meaningful in production build).
   if (isProd) {
     app.use(
       "/assets",
@@ -86,10 +45,7 @@ async function start() {
   const remixHandler = createRequestHandler({
     build: viteDevServer
       ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-      : (
-          // @ts-expect-error Build output exists only after `react-router build`
-          () => import("../build/server/index.js")
-        ),
+      : () => importServerBuild(),
   });
 
   app.all("*", remixHandler);
@@ -100,4 +56,3 @@ async function start() {
 }
 
 start();
-

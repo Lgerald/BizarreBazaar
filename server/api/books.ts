@@ -1,12 +1,12 @@
-import { Router } from "express";
-import type { PrismaClient } from "../../generated/prisma/client/client";
+import { readJson, json } from "../http/httpUtil";
+import type { ApiContext } from "./types";
 
-export function createBooksRouter(prisma: PrismaClient) {
-  const router = Router();
+export async function handleBooksApi(ctx: ApiContext): Promise<Response | null> {
+  const { pathname, method, request, prisma, url } = ctx;
 
-  router.get("/books", async (req, res) => {
-    const pageRaw = typeof req.query.page === "string" ? req.query.page : undefined;
-    const limitRaw = typeof req.query.limit === "string" ? req.query.limit : undefined;
+  if (pathname === "/api/books" && method === "GET") {
+    const pageRaw = url.searchParams.get("page") ?? undefined;
+    const limitRaw = url.searchParams.get("limit") ?? undefined;
 
     const page = pageRaw ? Number.parseInt(pageRaw, 10) : 1;
     const requestedLimit = limitRaw ? Number.parseInt(limitRaw, 10) : 20;
@@ -15,9 +15,7 @@ export function createBooksRouter(prisma: PrismaClient) {
       : 20;
 
     if (!Number.isFinite(page) || page < 1) {
-      return res
-        .status(400)
-        .json({ ok: false, error: "page must be a positive integer" });
+      return json({ ok: false, error: "page must be a positive integer" }, { status: 400 });
     }
 
     try {
@@ -34,7 +32,7 @@ export function createBooksRouter(prisma: PrismaClient) {
         }),
       ]);
 
-      return res.json({
+      return json({
         ok: true,
         books: books.map((b: any) => ({
           ...b,
@@ -49,86 +47,88 @@ export function createBooksRouter(prisma: PrismaClient) {
       });
     } catch (err) {
       console.error("GET /api/books failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.post("/books", async (req, res) => {
-    const ownerId =
-      typeof req.body?.ownerId === "string" ? req.body.ownerId.trim() : "";
-    const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
-    const url = typeof req.body?.url === "string" ? req.body.url.trim() : "";
-    const author =
-      typeof req.body?.author === "string" ? req.body.author.trim() : undefined;
+  if (pathname === "/api/books" && method === "POST") {
+    const body = (await readJson(request)) ?? {};
+    const ownerId = typeof body.ownerId === "string" ? body.ownerId.trim() : "";
+    const title = typeof body.title === "string" ? body.title.trim() : "";
+    const urlVal = typeof body.url === "string" ? body.url.trim() : "";
+    const author = typeof body.author === "string" ? body.author.trim() : undefined;
     const description =
-      typeof req.body?.description === "string" ? req.body.description.trim() : undefined;
+      typeof body.description === "string" ? body.description.trim() : undefined;
 
-    if (!ownerId || !title || !url) {
-      return res.status(400).json({
-        ok: false,
-        error: "ownerId, title, and url are required",
-      });
+    if (!ownerId || !title || !urlVal) {
+      return json({ ok: false, error: "ownerId, title, and url are required" }, { status: 400 });
     }
 
     try {
       const book = await prisma.book.create({
         data: {
           title,
-          url,
+          url: urlVal,
           ...(author ? { author } : {}),
           ...(description ? { description } : {}),
           owner: { connect: { id: ownerId } },
         },
       });
-      return res.status(201).json({ ok: true, book });
+      return json({ ok: true, book }, { status: 201 });
     } catch (err: any) {
       if (err?.code === "P2003") {
-        return res.status(400).json({ ok: false, error: "invalid ownerId" });
+        return json({ ok: false, error: "invalid ownerId" }, { status: 400 });
       }
       console.error("POST /api/books failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.patch("/books/:bookId", async (req, res) => {
-    const { bookId } = req.params;
+  const bookIdMatch = /^\/api\/books\/([^/]+)$/.exec(pathname);
+  if (bookIdMatch && method === "PATCH") {
+    const bookId = bookIdMatch[1]!;
+    const body = (await readJson(request)) ?? {};
 
-    const title = typeof req.body?.title === "string" ? req.body.title.trim() : undefined;
-    const url = typeof req.body?.url === "string" ? req.body.url.trim() : undefined;
-    const author = typeof req.body?.author === "string" ? req.body.author.trim() : undefined;
+    const title = typeof body.title === "string" ? body.title.trim() : undefined;
+    const urlVal = typeof body.url === "string" ? body.url.trim() : undefined;
+    const author = typeof body.author === "string" ? body.author.trim() : undefined;
     const description =
-      typeof req.body?.description === "string" ? req.body.description.trim() : undefined;
+      typeof body.description === "string" ? body.description.trim() : undefined;
 
-    const authorValue = req.body?.author === null ? null : author;
-    const descriptionValue = req.body?.description === null ? null : description;
+    const authorValue = body.author === null ? null : author;
+    const descriptionValue = body.description === null ? null : description;
 
-    const data: any = {};
+    const data: Record<string, unknown> = {};
     if (title !== undefined) data.title = title;
-    if (url !== undefined) data.url = url;
+    if (urlVal !== undefined) data.url = urlVal;
     if (authorValue !== undefined) data.author = authorValue;
     if (descriptionValue !== undefined) data.description = descriptionValue;
 
     if (Object.keys(data).length === 0) {
-      return res.status(400).json({
-        ok: false,
-        error: "Provide at least one field to update (title, url, author, description)",
-      });
+      return json(
+        {
+          ok: false,
+          error: "Provide at least one field to update (title, url, author, description)",
+        },
+        { status: 400 }
+      );
     }
 
     try {
-      const book = await prisma.book.update({ where: { id: bookId }, data });
-      return res.json({ ok: true, book });
+      const book = await prisma.book.update({ where: { id: bookId }, data: data as any });
+      return json({ ok: true, book });
     } catch (err: any) {
       if (err?.code === "P2025") {
-        return res.status(404).json({ ok: false, error: "book not found" });
+        return json({ ok: false, error: "book not found" }, { status: 404 });
       }
       console.error("PATCH /api/books/:bookId failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.get("/users/:userId/books", async (req, res) => {
-    const { userId } = req.params;
+  const userBooksMatch = /^\/api\/users\/([^/]+)\/books$/.exec(pathname);
+  if (userBooksMatch && method === "GET") {
+    const userId = userBooksMatch[1]!;
     try {
       const books = await prisma.book.findMany({
         where: { ownerId: userId },
@@ -137,7 +137,7 @@ export function createBooksRouter(prisma: PrismaClient) {
           owner: { select: { firstName: true, lastName: true } },
         },
       });
-      return res.json({
+      return json({
         ok: true,
         books: books.map((b: any) => ({
           ...b,
@@ -146,10 +146,9 @@ export function createBooksRouter(prisma: PrismaClient) {
       });
     } catch (err) {
       console.error("GET /api/users/:userId/books failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  return router;
+  return null;
 }
-

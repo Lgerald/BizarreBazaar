@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { makeTestApp } from "../testApp";
 
-vi.mock("../../auth/session", () => {
+vi.mock("../../auth/session", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("../../auth/session")>();
   return {
-    verifyRequestSession: vi.fn(),
+    ...mod,
+    verifyWebRequestSession: vi.fn(),
   };
 });
 
@@ -30,7 +32,7 @@ import * as gcal from "../../integrations/googleCalendar";
 
 describe("calendar API", () => {
   it("requires auth", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce(null);
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce(null);
     const prisma = {};
     const app = makeTestApp(prisma);
 
@@ -60,7 +62,7 @@ describe("calendar API", () => {
   });
 
   it("GET /api/calendar/events returns events from Google", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce({ uid: "u", email: "x@y.com" });
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce({ uid: "u", email: "x@y.com" });
     const prisma = {};
     const app = makeTestApp(prisma);
 
@@ -71,7 +73,7 @@ describe("calendar API", () => {
   });
 
   it("POST /api/calendar/events creates google event and persists record", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce({ uid: "u", email: "leah@example.com" });
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce({ uid: "u", email: "leah@example.com" });
     const prisma = {};
     const app = makeTestApp(prisma);
 

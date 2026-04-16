@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { makeTestApp } from "../testApp";
 
-vi.mock("../../auth/session", () => {
+vi.mock("../../auth/session", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("../../auth/session")>();
   return {
-    verifyRequestSession: vi.fn(),
+    ...mod,
+    verifyWebRequestSession: vi.fn(),
   };
 });
 
@@ -13,7 +15,7 @@ import * as session from "../../auth/session";
 
 describe("auth API", () => {
   it("GET /api/me returns 401 when not authenticated", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce(null);
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce(null);
 
     const prisma = {
       user: { findUnique: vi.fn() },
@@ -26,7 +28,7 @@ describe("auth API", () => {
   });
 
   it("GET /api/me returns firebaseUser + appUser (or null)", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce({
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce({
       uid: "fb_123",
       email: "leah@example.com",
       name: "Leah Gerald",

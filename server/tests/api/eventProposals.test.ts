@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { makeTestApp } from "../testApp";
 
-vi.mock("../../auth/session", () => {
+vi.mock("../../auth/session", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("../../auth/session")>();
   return {
-    verifyRequestSession: vi.fn(),
+    ...mod,
+    verifyWebRequestSession: vi.fn(),
   };
 });
 
@@ -44,7 +46,7 @@ import * as session from "../../auth/session";
 
 describe("event proposals API (gcal-only)", () => {
   it("requires auth", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce(null);
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce(null);
     const prisma = {};
     const app = makeTestApp(prisma);
 
@@ -54,7 +56,7 @@ describe("event proposals API (gcal-only)", () => {
   });
 
   it("GET /api/event-proposals returns proposed events", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce({
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce({
       uid: "fb1",
       email: "a@example.com",
     });
@@ -69,7 +71,7 @@ describe("event proposals API (gcal-only)", () => {
   });
 
   it("POST /api/event-proposals creates a proposed event", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce({
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce({
       uid: "fb1",
       email: "leah@example.com",
     });
@@ -88,7 +90,7 @@ describe("event proposals API (gcal-only)", () => {
   });
 
   it("POST /api/event-proposals/:eventId/join adds attendee", async () => {
-    (session.verifyRequestSession as any).mockResolvedValueOnce({
+    (session.verifyWebRequestSession as any).mockResolvedValueOnce({
       uid: "fb1",
       email: "new@example.com",
     });

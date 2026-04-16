@@ -1,85 +1,74 @@
-import { Router } from "express";
-import { requireUser } from "../auth/requireUser";
 import {
   buildOAuthConsentUrl,
   exchangeCodeForTokens,
   getCalendarId,
   makeCalendarClient,
 } from "../integrations/googleCalendar";
+import { readJson, json, escapeHtml, isIsoDateTimeString } from "../http/httpUtil";
+import { requireUserOr401 } from "../http/requireAuth";
+import { allowCalendarSetup } from "./calendarSetup";
+import type { ApiContext } from "./types";
 
-function isIsoDateTimeString(v: unknown): v is string {
-  return typeof v === "string" && Number.isFinite(Date.parse(v));
-}
+export async function handleCalendarApi(ctx: ApiContext): Promise<Response | null> {
+  const { pathname, method, request, url } = ctx;
 
-function allowSetup(req: any): boolean {
-  const setupKey = process.env.GCAL_SETUP_KEY;
-  if (!setupKey) return true; // personal-project default: no extra gate
-
-  const provided =
-    (typeof req.query?.setupKey === "string" ? req.query.setupKey : undefined) ??
-    (typeof req.body?.setupKey === "string" ? req.body.setupKey : undefined);
-
-  return Boolean(provided) && provided === setupKey;
-}
-
-export function createCalendarRouter(_prisma: any) {
-  const router = Router();
-
-  // Bootstrap helpers (personal project ergonomics)
-  router.get("/calendar/oauth/url", async (req, res) => {
+  if (pathname === "/api/calendar/oauth/url" && method === "GET") {
     try {
-      if (!allowSetup(req)) {
-        return res.status(401).json({ ok: false, error: "unauthorized" });
+      if (!allowCalendarSetup(request, null)) {
+        return json({ ok: false, error: "unauthorized" }, { status: 401 });
       }
-      return res.json({ ok: true, url: buildOAuthConsentUrl() });
+      return json({ ok: true, url: buildOAuthConsentUrl() });
     } catch (err: any) {
-      return res.status(500).json({ ok: false, error: err?.message ?? "failed" });
+      return json({ ok: false, error: err?.message ?? "failed" }, { status: 500 });
     }
-  });
+  }
 
-  router.get("/calendar/oauth/callback", async (req, res) => {
-    const code = typeof req.query.code === "string" ? req.query.code.trim() : "";
-    const error = typeof req.query.error === "string" ? req.query.error.trim() : "";
+  if (pathname === "/api/calendar/oauth/callback" && method === "GET") {
+    const code = url.searchParams.get("code")?.trim() ?? "";
+    const error = url.searchParams.get("error")?.trim() ?? "";
 
     if (error) {
-      return res
-        .status(400)
-        .type("html")
-        .send(`<pre>OAuth error: ${escapeHtml(error)}</pre>`);
+      return new Response(`<pre>OAuth error: ${escapeHtml(error)}</pre>`, {
+        status: 400,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
     }
 
     if (!code) {
-      return res
-        .status(400)
-        .type("html")
-        .send(`<pre>Missing code. Query params: ${escapeHtml(JSON.stringify(req.query ?? {}))}</pre>`);
+      return new Response(
+        `<pre>Missing code. Query params: ${escapeHtml(JSON.stringify(Object.fromEntries(url.searchParams)))}</pre>`,
+        { status: 400, headers: { "Content-Type": "text/html; charset=utf-8" } }
+      );
     }
 
-    return res.type("html").send(`<pre>Copy this code:\n\n${escapeHtml(code)}\n</pre>`);
-  });
+    return new Response(`<pre>Copy this code:\n\n${escapeHtml(code)}\n</pre>`, {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
 
-  router.post("/calendar/oauth/exchange", async (req, res) => {
-    const code = typeof req.body?.code === "string" ? req.body.code.trim() : "";
-    if (!code) return res.status(400).json({ ok: false, error: "code required" });
+  if (pathname === "/api/calendar/oauth/exchange" && method === "POST") {
+    const body = (await readJson(request)) ?? {};
+    const code = typeof body.code === "string" ? body.code.trim() : "";
+    if (!code) return json({ ok: false, error: "code required" }, { status: 400 });
 
     try {
-      if (!allowSetup(req)) {
-        return res.status(401).json({ ok: false, error: "unauthorized" });
+      if (!allowCalendarSetup(request, body)) {
+        return json({ ok: false, error: "unauthorized" }, { status: 401 });
       }
       const tokens = await exchangeCodeForTokens(code);
-      // We return tokens so you can copy `refresh_token` into env locally.
-      return res.json({ ok: true, tokens });
-    } catch (err: any) {
+      return json({ ok: true, tokens });
+    } catch (err) {
       console.error("POST /api/calendar/oauth/exchange failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.get("/calendar/events", requireUser, async (req, res) => {
-    const timeMinRaw =
-      typeof req.query.timeMin === "string" ? req.query.timeMin : undefined;
-    const timeMaxRaw =
-      typeof req.query.timeMax === "string" ? req.query.timeMax : undefined;
+  if (pathname === "/api/calendar/events" && method === "GET") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+
+    const timeMinRaw = url.searchParams.get("timeMin") ?? undefined;
+    const timeMaxRaw = url.searchParams.get("timeMax") ?? undefined;
 
     const timeMin = timeMinRaw && isIsoDateTimeString(timeMinRaw) ? timeMinRaw : undefined;
     const timeMax = timeMaxRaw && isIsoDateTimeString(timeMaxRaw) ? timeMaxRaw : undefined;
@@ -98,37 +87,39 @@ export function createCalendarRouter(_prisma: any) {
       });
 
       const items = data.items ?? [];
-      return res.json({ ok: true, events: items });
+      return json({ ok: true, events: items });
     } catch (err) {
       console.error("GET /api/calendar/events failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.post("/calendar/events", requireUser, async (req, res) => {
-    const summary =
-      typeof req.body?.summary === "string" ? req.body.summary.trim() : "";
+  if (pathname === "/api/calendar/events" && method === "POST") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+
+    const body = (await readJson(request)) ?? {};
+    const summary = typeof body.summary === "string" ? body.summary.trim() : "";
     const description =
-      typeof req.body?.description === "string" ? req.body.description.trim() : undefined;
-    const location =
-      typeof req.body?.location === "string" ? req.body.location.trim() : undefined;
+      typeof body.description === "string" ? body.description.trim() : undefined;
+    const location = typeof body.location === "string" ? body.location.trim() : undefined;
 
-    const startAtRaw = req.body?.startAt;
-    const endAtRaw = req.body?.endAt;
-    const timeZone =
-      typeof req.body?.timeZone === "string" ? req.body.timeZone.trim() : undefined;
+    const startAtRaw = body.startAt;
+    const endAtRaw = body.endAt;
+    const timeZone = typeof body.timeZone === "string" ? body.timeZone.trim() : undefined;
 
-    if (!summary) return res.status(400).json({ ok: false, error: "summary required" });
+    if (!summary) return json({ ok: false, error: "summary required" }, { status: 400 });
     if (!isIsoDateTimeString(startAtRaw) || !isIsoDateTimeString(endAtRaw)) {
-      return res
-        .status(400)
-        .json({ ok: false, error: "startAt and endAt must be ISO datetime strings" });
+      return json(
+        { ok: false, error: "startAt and endAt must be ISO datetime strings" },
+        { status: 400 }
+      );
     }
 
     const startAt = new Date(startAtRaw);
     const endAt = new Date(endAtRaw);
     if (!(endAt.getTime() > startAt.getTime())) {
-      return res.status(400).json({ ok: false, error: "endAt must be after startAt" });
+      return json({ ok: false, error: "endAt must be after startAt" }, { status: 400 });
     }
 
     try {
@@ -147,39 +138,48 @@ export function createCalendarRouter(_prisma: any) {
       });
 
       const googleEvent = insertRes.data;
-      if (!googleEvent.id) return res.status(500).json({ ok: false, error: "missing event id" });
-      return res.status(201).json({ ok: true, event: googleEvent });
+      if (!googleEvent?.id) return json({ ok: false, error: "missing event id" }, { status: 500 });
+      return json({ ok: true, event: googleEvent }, { status: 201 });
     } catch (err) {
       console.error("POST /api/calendar/events failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.patch("/calendar/events/:id", requireUser, async (req, res) => {
-    const { id } = req.params;
-    const summary =
-      typeof req.body?.summary === "string" ? req.body.summary.trim() : undefined;
+  const calEventIdMatch = /^\/api\/calendar\/events\/([^/]+)$/.exec(pathname);
+  if (calEventIdMatch && method === "PATCH") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+
+    const id = calEventIdMatch[1]!;
+    const body = (await readJson(request)) ?? {};
+    const summary = typeof body.summary === "string" ? body.summary.trim() : undefined;
     const description =
-      typeof req.body?.description === "string" ? req.body.description.trim() : undefined;
-    const location =
-      typeof req.body?.location === "string" ? req.body.location.trim() : undefined;
+      typeof body.description === "string" ? body.description.trim() : undefined;
+    const location = typeof body.location === "string" ? body.location.trim() : undefined;
 
-    const startAtRaw = req.body?.startAt;
-    const endAtRaw = req.body?.endAt;
-    const timeZone =
-      typeof req.body?.timeZone === "string" ? req.body.timeZone.trim() : undefined;
+    const startAtRaw = body.startAt;
+    const endAtRaw = body.endAt;
+    const timeZone = typeof body.timeZone === "string" ? body.timeZone.trim() : undefined;
 
-    const startAt = startAtRaw === undefined ? undefined : isIsoDateTimeString(startAtRaw) ? new Date(startAtRaw) : null;
-    const endAt = endAtRaw === undefined ? undefined : isIsoDateTimeString(endAtRaw) ? new Date(endAtRaw) : null;
+    const startAt =
+      startAtRaw === undefined
+        ? undefined
+        : isIsoDateTimeString(startAtRaw)
+          ? new Date(startAtRaw)
+          : null;
+    const endAt =
+      endAtRaw === undefined ? undefined : isIsoDateTimeString(endAtRaw) ? new Date(endAtRaw) : null;
 
     if (startAt === null || endAt === null) {
-      return res
-        .status(400)
-        .json({ ok: false, error: "startAt/endAt must be ISO datetime strings when provided" });
+      return json(
+        { ok: false, error: "startAt/endAt must be ISO datetime strings when provided" },
+        { status: 400 }
+      );
     }
 
     if (startAt && endAt && !(endAt.getTime() > startAt.getTime())) {
-      return res.status(400).json({ ok: false, error: "endAt must be after startAt" });
+      return json({ ok: false, error: "endAt must be after startAt" }, { status: 400 });
     }
 
     if (
@@ -190,7 +190,7 @@ export function createCalendarRouter(_prisma: any) {
       endAt === undefined &&
       timeZone === undefined
     ) {
-      return res.status(400).json({ ok: false, error: "Provide at least one field to update" });
+      return json({ ok: false, error: "Provide at least one field to update" }, { status: 400 });
     }
 
     try {
@@ -213,37 +213,30 @@ export function createCalendarRouter(_prisma: any) {
         },
       } as any);
 
-      return res.json({ ok: true, event: patchRes.data });
+      return json({ ok: true, event: patchRes.data });
     } catch (err) {
       console.error("PATCH /api/calendar/events/:id failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  router.delete("/calendar/events/:id", requireUser, async (req, res) => {
-    const { id } = req.params;
+  if (calEventIdMatch && method === "DELETE") {
+    const auth = await requireUserOr401(request);
+    if (auth instanceof Response) return auth;
+
+    const id = calEventIdMatch[1]!;
     try {
       const calendar = makeCalendarClient();
       const calendarId = getCalendarId();
 
       await calendar.events.delete({ calendarId, eventId: id } as any);
 
-      return res.json({ ok: true });
+      return json({ ok: true });
     } catch (err) {
       console.error("DELETE /api/calendar/events/:id failed", err);
-      return res.status(500).json({ ok: false });
+      return json({ ok: false }, { status: 500 });
     }
-  });
+  }
 
-  return router;
+  return null;
 }
-
-function escapeHtml(s: string) {
-  return s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-

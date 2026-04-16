@@ -1,20 +1,11 @@
-import express from "express";
 import cookieParser from "cookie-parser";
-import { createAuthRouter } from "../api/auth";
-import { createBooksRouter } from "../api/books";
-import { createCalendarRouter } from "../api/calendar";
-import { createEventProposalsRouter } from "../api/eventProposals";
-import { createUsersRouter } from "../api/users";
+import express from "express";
+import { mountApiOnExpress } from "../http/expressAdapter";
 
 export function makeTestApp(prisma: any) {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
-  app.use("/api", createAuthRouter(prisma));
-  app.use("/api", createUsersRouter(prisma));
-  app.use("/api", createBooksRouter(prisma));
-  app.use("/api", createCalendarRouter(prisma));
-  app.use("/api", createEventProposalsRouter(prisma));
+  mountApiOnExpress(app, prisma);
   return app;
 }
-

@@ -1,0 +1,228 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "root": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/api.$": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/_index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/users": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/users.$userId": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/calendar": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/books": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/mall": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/login": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "app/root.tsx",
+        "path": "",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/api.$": {
+        "id": "routes/api.$",
+        "parentId": "root",
+        "file": "app/routes/api.$.tsx",
+        "path": "api/*",
+        "config": {}
+      },
+      "routes/_layout": {
+        "id": "routes/_layout",
+        "parentId": "root",
+        "file": "app/routes/_layout.tsx",
+        "config": {}
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "routes/_layout",
+        "file": "app/routes/_index.tsx",
+        "index": true,
+        "config": {}
+      },
+      "routes/users": {
+        "id": "routes/users",
+        "parentId": "routes/_layout",
+        "file": "app/routes/users.tsx",
+        "path": "users",
+        "config": {}
+      },
+      "routes/users.$userId": {
+        "id": "routes/users.$userId",
+        "parentId": "routes/_layout",
+        "file": "app/routes/users.$userId.tsx",
+        "path": "users/:userId",
+        "config": {}
+      },
+      "routes/calendar": {
+        "id": "routes/calendar",
+        "parentId": "routes/_layout",
+        "file": "app/routes/calendar.tsx",
+        "path": "calendar",
+        "config": {}
+      },
+      "routes/books": {
+        "id": "routes/books",
+        "parentId": "routes/_layout",
+        "file": "app/routes/books.tsx",
+        "path": "books",
+        "config": {}
+      },
+      "routes/mall": {
+        "id": "routes/mall",
+        "parentId": "routes/_layout",
+        "file": "app/routes/mall.tsx",
+        "path": "mall",
+        "config": {}
+      },
+      "routes/login": {
+        "id": "routes/login",
+        "parentId": "routes/_layout",
+        "file": "app/routes/login.tsx",
+        "path": "login",
+        "config": {}
+      }
+    }
+  },
+  "reactRouterConfig": {
+    "appDirectory": "/Users/leahgerald/Documents/Dev/bizarreBazaar/app",
+    "basename": "/",
+    "buildDirectory": "/Users/leahgerald/Documents/Dev/bizarreBazaar/build",
+    "future": {
+      "unstable_optimizeDeps": false,
+      "unstable_subResourceIntegrity": false,
+      "unstable_trailingSlashAwareDataRequests": false,
+      "v8_middleware": false,
+      "v8_splitRouteModules": false,
+      "v8_viteEnvironmentApi": false
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "root.tsx",
+        "path": ""
+      },
+      "routes/api.$": {
+        "id": "routes/api.$",
+        "parentId": "root",
+        "file": "routes/api.$.tsx",
+        "path": "api/*"
+      },
+      "routes/_layout": {
+        "id": "routes/_layout",
+        "parentId": "root",
+        "file": "routes/_layout.tsx"
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "routes/_layout",
+        "file": "routes/_index.tsx",
+        "index": true
+      },
+      "routes/users": {
+        "id": "routes/users",
+        "parentId": "routes/_layout",
+        "file": "routes/users.tsx",
+        "path": "users"
+      },
+      "routes/users.$userId": {
+        "id": "routes/users.$userId",
+        "parentId": "routes/_layout",
+        "file": "routes/users.$userId.tsx",
+        "path": "users/:userId"
+      },
+      "routes/calendar": {
+        "id": "routes/calendar",
+        "parentId": "routes/_layout",
+        "file": "routes/calendar.tsx",
+        "path": "calendar"
+      },
+      "routes/books": {
+        "id": "routes/books",
+        "parentId": "routes/_layout",
+        "file": "routes/books.tsx",
+        "path": "books"
+      },
+      "routes/mall": {
+        "id": "routes/mall",
+        "parentId": "routes/_layout",
+        "file": "routes/mall.tsx",
+        "path": "mall"
+      },
+      "routes/login": {
+        "id": "routes/login",
+        "parentId": "routes/_layout",
+        "file": "routes/login.tsx",
+        "path": "login"
+      }
+    },
+    "routeDiscovery": {
+      "mode": "lazy",
+      "manifestPath": "/__manifest"
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true,
+    "allowedActionOrigins": false,
+    "unstable_routeConfig": [
+      {
+        "id": "root",
+        "path": "",
+        "file": "root.tsx",
+        "children": [
+          {
+            "file": "routes/api.$.tsx",
+            "path": "api/*"
+          },
+          {
+            "file": "routes/_layout.tsx",
+            "children": [
+              {
+                "file": "routes/_index.tsx",
+                "index": true
+              },
+              {
+                "file": "routes/users.tsx",
+                "path": "users"
+              },
+              {
+                "file": "routes/users.$userId.tsx",
+                "path": "users/:userId"
+              },
+              {
+                "file": "routes/calendar.tsx",
+                "path": "calendar"
+              },
+              {
+                "file": "routes/books.tsx",
+                "path": "books"
+              },
+              {
+                "file": "routes/mall.tsx",
+                "path": "mall"
+              },
+              {
+                "file": "routes/login.tsx",
+                "path": "login"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}
