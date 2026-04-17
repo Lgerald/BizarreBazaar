@@ -30,7 +30,15 @@ type MeResponse =
     }
   | { ok: false };
 
-export function Sidebar() {
+export function Sidebar({
+  compact,
+  onNavigate,
+  onRequestClose,
+}: {
+  compact?: boolean;
+  onNavigate?: () => void;
+  onRequestClose?: () => void;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [me, setMe] = useState<MeResponse | null>(null);
   const [busy, setBusy] = useState(false);
@@ -140,12 +148,12 @@ export function Sidebar() {
   return (
     <aside
       style={{
-        width: 240,
         borderRight: "1px solid #e5e7eb",
-        padding: 12,
+        padding: compact ? 10 : 12,
         display: "grid",
         gap: 12,
         alignContent: "start",
+        height: "100%",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -158,6 +166,27 @@ export function Sidebar() {
           ) : null}
         </div>
         <div style={{ marginLeft: "auto", position: "relative" }}>
+          {onRequestClose ? (
+            <button
+              type="button"
+              aria-label="Close navigation"
+              onClick={() => {
+                setMenuOpen(false);
+                onRequestClose();
+              }}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                border: "1px solid #e5e7eb",
+                background: "white",
+                cursor: "pointer",
+                marginRight: 8,
+              }}
+            >
+              ✕
+            </button>
+          ) : null}
           <button
             type="button"
             aria-label="Open menu"
@@ -316,6 +345,10 @@ export function Sidebar() {
             <NavLink
               to={item.to}
               end
+              onClick={() => {
+                setMenuOpen(false);
+                onNavigate?.();
+              }}
               style={({ isActive }) => ({
                 padding: "10px 12px",
                 borderRadius: 12,
@@ -335,6 +368,10 @@ export function Sidebar() {
                   <NavLink
                     key={child.to}
                     to={child.to}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onNavigate?.();
+                    }}
                     style={({ isActive }) => ({
                       padding: "10px 12px",
                       borderRadius: 12,
@@ -404,11 +441,6 @@ export function Sidebar() {
               >
                 ✕
               </button>
-            </div>
-
-            <div style={{ color: "#6b7280", fontSize: 13 }}>
-              Continue with Google to create a server session cookie. If you’re
-              new, we’ll ask for a couple details to create your account.
             </div>
 
             {me?.ok && !me.appUser ? (
